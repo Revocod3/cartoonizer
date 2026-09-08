@@ -22,7 +22,7 @@ def choose_image_size(width: int, height: int) -> str:
 
 
 def choose_image_quality(instructions: dict[str, Any]) -> str:
-    quality = instructions.get("image_quality", "medium")
+    quality = instructions.get("image_quality", "low")
     if quality not in ("low", "medium"):
         raise ValueError("Image quality must be low or medium")
     return quality

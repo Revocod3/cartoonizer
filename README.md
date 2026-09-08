@@ -14,9 +14,9 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Abre la URL que muestra Streamlit. El modo **Simulado** permite comprobar carga, persistencia, revisión, versiones y exportación sin consumir API.
+Abre la URL que muestra Streamlit. Puedes consultar lotes guardados, revisar versiones y exportar resultados sin configurar la API.
 
-## Flujo real
+## OpenAI
 
 Configura la clave solo en tu terminal; no la pegues en la interfaz ni la guardes en el repositorio.
 
@@ -34,10 +34,10 @@ set +a
 streamlit run app.py
 ```
 
-Selecciona **OpenAI real** dentro de la aplicación. El pipeline utiliza:
+La aplicación utiliza OpenAI directamente al procesar una primera pasada o crear una corrección. El pipeline utiliza:
 
 - GPT-5.6 Luna con `reasoning.effort: none` para análisis estructurado.
-- GPT Image 2 para edición en PNG con calidad `low` o `medium` (se elige al crear el lote).
+- GPT Image 2 para edición en PNG. Los lotes nuevos usan calidad `low` por defecto y permiten seleccionar `medium` al crearlos.
 - GPT-5.6 Terra con `reasoning.effort: none` para evaluar raster y render SVG.
 - VTracer y CairoSVG para vectorizar y verificar el SVG.
 

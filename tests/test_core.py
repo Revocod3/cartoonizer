@@ -200,7 +200,7 @@ class CartoonizerCoreTests(unittest.TestCase):
     def test_image_quality_allows_only_low_or_medium(self):
         self.assertEqual(choose_image_quality({"image_quality": "low"}), "low")
         self.assertEqual(choose_image_quality({"image_quality": "medium"}), "medium")
-        self.assertEqual(choose_image_quality({}), "medium")
+        self.assertEqual(choose_image_quality({}), "low")
         with self.assertRaises(ValueError):
             choose_image_quality({"image_quality": "high"})
 
