@@ -298,19 +298,3 @@ class BatchWorker:
             self.db.record_usage(batch_id, "gpt-5.6-terra", **usage)
             evaluation["vector_evaluation"] = vector_evaluation
         return self.db.add_version(job_id, str(generated), str(svg), evaluation, note)
-
-
-class SimulatedPipeline:
-    def analyze(self, original: Path, settings: dict[str, Any]):
-        return ({"subjects": ["anime character"], "pose": "preserve original", "ambiguities": [], "edit_instructions": settings.get("notes", "")}, {"input_tokens": 0, "output_tokens": 0})
-
-    def generate(self, original: Path, instructions: dict[str, Any], destination: Path, previous: Path | None = None):
-        shutil.copyfile(previous or original, destination)
-        return destination, {"image_attempts": 0}
-
-    def evaluate(self, original: Path, candidate: Path, instructions: dict[str, Any]):
-        return ({"category": "possible_correction", "criteria": {"identity": "not_verifiable"}, "defects": [], "uncertainties": ["Simulated evaluation"]}, {"input_tokens": 0, "output_tokens": 0})
-
-    def vectorize(self, candidate: Path, destination: Path, mode: str):
-        destination.write_text('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M10 10h80v80H10z" fill="none" stroke="currentColor"/></svg>', encoding="utf-8")
-        return destination

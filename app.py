@@ -9,7 +9,7 @@ from pathlib import Path
 import streamlit as st
 from PIL import Image, ImageOps
 
-from cartoonizer.core import BatchWorker, Database, SimulatedPipeline, export_version, render_svg
+from cartoonizer.core import BatchWorker, Database, export_version, render_svg
 from cartoonizer.providers import OpenAIPipeline
 
 
@@ -60,12 +60,10 @@ def preview_image(path: str | Path, background: str):
     return base
 
 
-def pipeline_for(mode: str):
-    if mode == "OpenAI real":
-        if not os.getenv("OPENAI_API_KEY"):
-            raise RuntimeError("Define OPENAI_API_KEY antes de usar el flujo real.")
-        return OpenAIPipeline()
-    return SimulatedPipeline()
+def pipeline_for():
+    if not os.getenv("OPENAI_API_KEY"):
+        raise RuntimeError("Define OPENAI_API_KEY antes de usar el flujo real.")
+    return OpenAIPipeline()
 
 
 with st.sidebar:
@@ -82,7 +80,7 @@ with st.sidebar:
     cleanup = st.select_slider("Limpieza", options=["soft", "medium", "strong"], value="soft")
     colour = st.selectbox("Color", ["faithful", "slightly simplified", "flat"])
     detail = st.select_slider("Detalle", options=["low", "balanced", "high"], value="high")
-    image_quality = st.radio("Calidad GPT Image 2", ["low", "medium"], index=1, horizontal=True)
+    image_quality = st.radio("Calidad GPT Image 2", ["low", "medium"], index=0, horizontal=True)
     vector_mode = st.selectbox("Vectorización", ["detail", "curves"], format_func=lambda value: "Conservar detalle" if value == "detail" else "Simplificar curvas")
     notes = st.text_area("Instrucciones comunes", placeholder="Conserva expresión, colores y elementos visibles…")
     if st.button("Crear lote", type="primary", width="stretch"):
@@ -113,16 +111,12 @@ cols = st.columns(4)
 for col, label, value in zip(cols, ["Pendientes", "Revisadas", "Seleccionadas", "Listas"], [pending, reviewed, report["counts"]["selected"], report["counts"]["ready"]]):
     col.markdown(f'<div class="metric"><span class="eyebrow">{label}</span><strong>{value}</strong></div>', unsafe_allow_html=True)
 
-control, status = st.columns([1, 2])
-with control:
-    mode = st.selectbox("Motor", ["Simulado", "OpenAI real"], help="El modo simulado no consume API y permite comprobar la interfaz.")
-with status:
-    st.caption("Configuración efectiva: " + json.dumps(batch["settings"], ensure_ascii=False))
-    if report["counts"]["failed"]:
-        st.warning(f"{report['counts']['failed']} imágenes requieren atención por un fallo.")
+st.caption("Configuración efectiva: " + json.dumps(batch["settings"], ensure_ascii=False))
+if report["counts"]["failed"]:
+    st.warning(f"{report['counts']['failed']} imágenes requieren atención por un fallo.")
 if st.button("Procesar o reanudar primera pasada", type="primary", disabled=pending == 0):
     try:
-        completed = BatchWorker(DB, pipeline_for(mode), ROOT / batch_id / "artifacts").run_batch(batch_id)
+        completed = BatchWorker(DB, pipeline_for(), ROOT / batch_id / "artifacts").run_batch(batch_id)
         st.success(f"Se completaron {completed} imágenes.")
         st.rerun()
     except Exception as exc:
@@ -187,7 +181,7 @@ with review_tab:
             if action_cols[2].button("Crear corrección", key=f"correct-{job['id']}", disabled=not versions):
                 correction = ", ".join(reasons + ([note] if note else []))
                 try:
-                    BatchWorker(DB, pipeline_for(mode), ROOT / batch_id / "artifacts").correct(batch_id, job["id"], correction)
+                    BatchWorker(DB, pipeline_for(), ROOT / batch_id / "artifacts").correct(batch_id, job["id"], correction)
                     st.rerun()
                 except Exception as exc:
                     st.error(str(exc))
